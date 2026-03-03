@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Lock Screen</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        body { 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+            background: #050505; overflow: hidden; padding: 20px;
+        }
+
+        /* පසුබිමේ ඇති Neon එළි */
+        .bg-light {
+            position: absolute; width: 300px; height: 300px; 
+            background: rgba(0, 255, 255, 0.15); 
+            filter: blur(100px); border-radius: 50%; z-index: -1;
+        }
+        .light-1 { top: -100px; left: -100px; background: rgba(255, 0, 255, 0.15); }
+        .light-2 { bottom: -100px; right: -100px; }
+
+        .login-box { 
+            background: rgba(255, 255, 255, 0.03); 
+            padding: 40px; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
+            width: 100%; max-width: 380px; text-align: center; 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; transition: 0.5s;
+        }
+
+        h2 { 
+            color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 22px;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; 
+        }
+        
+        p { color: rgba(255,255,255,0.5); font-size: 13px; margin-bottom: 30px; line-height: 1.5; }
+
+        .input-group { position: relative; width: 100%; margin-bottom: 25px; }
+
+        input { 
+            width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; outline: none; color: #fff; font-size: 18px; letter-spacing: 3px;
+            transition: 0.5s; text-align: center;
+        }
+
+        input:focus { border-color: #0ff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); }
+
+        button { 
+            width: 100%; padding: 15px; 
+            background: #0ff; border: none; border-radius: 12px; 
+            color: #000; font-size: 16px; font-weight: bold; text-transform: uppercase; 
+            letter-spacing: 2px; cursor: pointer; transition: 0.5s; 
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        button:hover { box-shadow: 0 0 30px #0ff; transform: scale(1.02); }
+
+        /* Loader පෙනුම */
+        #loader-container { display: none; margin-top: 20px; }
+        
+        .loader {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(0, 255, 255, 0.1);
+            border-top: 5px solid #0ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #message { margin-top: 15px; font-size: 13px; color: #ff3333; font-weight: bold; text-shadow: 0 0 5px #ff3333; }
+        .success-msg { color: #33ff33 !important; text-shadow: 0 0 8px #33ff33 !important; }
+
+    </style>
+</head>
+<body>
+
+<div class="bg-light light-1"></div>
+<div class="bg-light light-2"></div>
+
+<div class="login-box" id="login-card">
+    <h2 id="title">Web Lock</h2>
+    <p id="sub-title">ආරක්ෂක පරීක්ෂාව: ඉදිරියට යාමට මුරපදය ඇතුලත් කරන්න</p>
+    
+    <div id="input-area">
+        <div class="input-group">
+            <input type="password" id="pass-input" placeholder="••••••••" required>
+        </div>
+        <button onclick="handleLogin()" id="btn-text">Login</button>
+    </div>
+
+    <div id="loader-container">
+        <div class="loader"></div>
+        <p class="success-msg">CONNECTING TO WHATSAPP...</p>
+    </div>
+    
+    <p id="message"></p>
+</div>
+
+<script>
+    const TARGET_URL = "https://web.whatsapp.com/";
+    const savedPassword = localStorage.getItem("userPassword");
+    
+    const title = document.getElementById("title");
+    const subTitle = document.getElementById("sub-title");
+    const btnText = document.getElementById("btn-text");
+    const inputField = document.getElementById("pass-input");
+    const inputArea = document.getElementById("input-area");
+    const loaderContainer = document.getElementById("loader-container");
+    const message = document.getElementById("message");
+
+    if (!savedPassword) {
+        title.innerText = "Setup Key";
+        subTitle.innerText = "CREATE A MASTER PASSWORD FOR THIS DEVICE";
+        btnText.innerText = "SET PASSWORD";
+    }
+
+    function handleLogin() {
+        const inputVal = inputField.value;
+
+        if (inputVal === "") {
+            message.innerText = "ERROR: ACCESS DENIED. ENTER PASSWORD.";
+            return;
+        }
+
+        if (!savedPassword) {
+            localStorage.setItem("userPassword", inputVal);
+            message.classList.add("success-msg");
+            message.innerText = "KEY SAVED! RESTARTING...";
+            inputField.style.borderColor = "#33ff33";
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            if (inputVal === savedPassword) {
+                // UI එක වෙනස් කිරීම
+                inputArea.style.display = "none";
+                loaderContainer.style.display = "block";
+                message.innerText = "";
+                title.innerText = "AUTHORIZED";
+                subTitle.innerText = "DECRYPTING DATA...";
+
+                setTimeout(() => {
+                    window.location.href = TARGET_URL;
+                }, 2000);
+            } else {
+                message.classList.remove("success-msg");
+                message.innerText = "ERROR: INVALID SECURITY KEY!";
+                inputField.style.boxShadow = "0 0 20px #ff3333";
+                inputField.style.borderColor = "#ff3333";
+                
+                setTimeout(() => {
+                    inputField.style.boxShadow = "none";
+                    inputField.style.borderColor = "rgba(255,255,255,0.1)";
+                }, 500);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
